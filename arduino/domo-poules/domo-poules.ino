@@ -81,6 +81,7 @@ void setup() {
 
   // initialisation etat porte
   isOpen = isPorteOpen();
+  isLight = isOpen;
   if( !isOpen && isPorteClose() ) {
     // la porte est blquÃ©e entre les deux
     openPorte();
@@ -94,25 +95,39 @@ void loop() {
 
   boolean btnPorte = digitalRead( IN_BTN );
 
-  /*Serial.print(F("porte ouvertre : " ));
+  Serial.print(F("porte ouvertre : " ));
   Serial.print( isOpen );
-  Serial.print(" |Light : ");
+  Serial.print(" | Light : ");
   Serial.print( lightVal );
   Serial.print(" -> ");
-  Serial.println( isLight );*/
+  Serial.println( isLight );
+  delay(1000);
 
-  if ( isLight != isLightLoop || btnPorte ) {
+  if ( isLight != isLightLoop ) {
     // plus de lumiÃ¨re et porte ouverte -> on ferme
     // de lumiere et porte fermÃ©e  -> on ouvre
+    unsigned long startTime = millis();
+    boolean chgt = true;
+    while( (millis() - startTime) < 18000 ) {
+      if( isLightLoop !=  digitalRead( DIGITAL_IN_LIGHT ) ) {
+        chgt = false;
+      }
+    }
+    if( chgt ) {
+      isOpen = isLightLoop;
+      if (isOpen) openPorte();
+      else closePorte();
+      isLight = isLightLoop;
+    }
+  }
 
+
+  //btn user UX
+  if( btnPorte ) {
     isOpen = !isOpen;
-    if ( !btnPorte ) isOpen = isLight;
-
     if (isOpen) openPorte();
     else closePorte();
-
   }
-  isLight = isLightLoop;
 
   // flash led pour l'état de la poste
   if( (millis() - flashTime) > 2000) {
@@ -125,6 +140,7 @@ void loop() {
       delay( 300 );
       digitalWrite( OUT_RED_LED, LOW );
     }
+    delay(300);
     flashTime = millis();
   }
 }
@@ -144,7 +160,7 @@ void closePorte() {
   digitalWrite( OUT_GREEN_LED, LOW );
   digitalWrite( PIN_MOTOR_2, LOW );
   digitalWrite( PIN_MOTOR_1, HIGH );
-  delay( 5500 );
+  delay( 6000 );
   digitalWrite( PIN_MOTOR_1, LOW );
   digitalWrite( OUT_RED_LED, LOW );
 }
@@ -155,4 +171,3 @@ boolean isPorteOpen() {
 boolean isPorteClose() {
   return !isOpen;
 }
-
